@@ -1,0 +1,270 @@
+
+#include <iostream>
+#include <string>
+#include <limits>
+using namespace std;
+
+struct BookRequest
+{
+    int studentID;
+    string studentName;
+    int bookID;
+    string bookTitle;
+    int priority;
+    BookRequest* next;
+};
+
+class PriorityQueue
+{
+private:
+    BookRequest* front;
+    BookRequest* rear;
+    int count;
+
+public:
+    PriorityQueue()
+    {
+        front = nullptr;
+        rear = nullptr;
+        count = 0;
+    }
+
+    void Add(BookRequest* request)
+    {
+        request->next = nullptr;
+
+        if (front == nullptr)
+        {
+            front = rear = request;
+        }
+        else if (request->priority < front->priority)
+        {
+            request->next = front;
+            front = request;
+        }
+        else
+        {
+            BookRequest* current = front;
+
+            while (current->next != nullptr &&
+                   current->next->priority <= request->priority)
+            {
+                current = current->next;
+            }
+
+            request->next = current->next;
+            current->next = request;
+
+            if (request->next == nullptr)
+            {
+                rear = request;
+            }
+        }
+
+        count++;
+    }
+
+    BookRequest* Remove()
+    {
+        if (front == nullptr)
+        {
+            return nullptr;
+        }
+
+        BookRequest* request = front;
+        front = front->next;
+
+        if (front == nullptr)
+        {
+            rear = nullptr;
+        }
+
+        request->next = nullptr;
+        count--;
+
+        return request;
+    }
+
+    bool IsEmpty()
+    {
+        return front == nullptr;
+    }
+
+    bool IsNotEmpty()
+    {
+        return front != nullptr;
+    }
+
+    void Display()
+    {
+        if (IsEmpty())
+        {
+            cout << "No pending requests." << endl;
+            return;
+        }
+
+        BookRequest* current = front;
+
+        while (current != nullptr)
+        {
+            cout << "\nStudent ID: " << current->studentID << endl;
+            cout << "Student Name: " << current->studentName << endl;
+            cout << "Book ID: " << current->bookID << endl;
+            cout << "Book Title: " << current->bookTitle << endl;
+            cout << "Priority: " << current->priority << endl;
+            cout << "------------------------" << endl;
+
+            current = current->next;
+        }
+    }
+
+    ~PriorityQueue()
+    {
+        while (front != nullptr)
+        {
+            BookRequest* temp = front;
+            front = front->next;
+            delete temp;
+        }
+
+        rear = nullptr;
+        count = 0;
+    }
+};
+
+int main()
+{
+    PriorityQueue requests;
+    int choice;
+
+    do
+    {
+        cout << "\n===== Library Priority Request System =====" << endl;
+        cout << "1. Add Book Request" << endl;
+        cout << "2. Process Urgent Request" << endl;
+        cout << "3. Display All Requests" << endl;
+        cout << "4. Check Queue Status" << endl;
+        cout << "5. Exit" << endl;
+        cout << "Enter choice: ";
+
+        if (!(cin >> choice))
+        {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input." << endl;
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        switch (choice)
+        {
+        case 1:
+        {
+            BookRequest* request = new BookRequest;
+
+            cout << "Enter Student ID: ";
+            if (!(cin >> request->studentID))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                delete request;
+                cout << "Invalid Student ID." << endl;
+                break;
+            }
+
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            cout << "Enter Student Name: ";
+            getline(cin, request->studentName);
+
+            cout << "Enter Book ID: ";
+            if (!(cin >> request->bookID))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                delete request;
+                cout << "Invalid Book ID." << endl;
+                break;
+            }
+
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            cout << "Enter Book Title: ";
+            getline(cin, request->bookTitle);
+
+            cout << "Enter Priority (1-Exam, 2-Assignment, 3-Normal): ";
+            if (!(cin >> request->priority))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                delete request;
+                cout << "Invalid priority." << endl;
+                break;
+            }
+
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            if (request->priority < 1 || request->priority > 3)
+            {
+                cout << "Priority must be between 1 and 3." << endl;
+                delete request;
+                break;
+            }
+
+            request->next = nullptr;
+            requests.Add(request);
+
+            cout << "Request added successfully." << endl;
+            break;
+        }
+
+        case 2:
+        {
+            BookRequest* request = requests.Remove();
+
+            if (request == nullptr)
+            {
+                cout << "No requests to process." << endl;
+            }
+            else
+            {
+                cout << "\n===== Processed Request =====" << endl;
+                cout << "Student: " << request->studentName << endl;
+                cout << "Book: " << request->bookTitle << endl;
+                cout << "Priority: " << request->priority << endl;
+
+                delete request;
+            }
+
+            break;
+        }
+
+        case 3:
+            cout << "\n===== Pending Requests =====" << endl;
+            requests.Display();
+            break;
+
+        case 4:
+            if (requests.IsEmpty())
+            {
+                cout << "Queue is empty." << endl;
+            }
+            else if (requests.IsNotEmpty())
+            {
+                cout << "Queue contains pending requests." << endl;
+            }
+            break;
+
+        case 5:
+            cout << "Program terminated." << endl;
+            break;
+
+        default:
+            cout << "Invalid choice. Select 1 to 5." << endl;
+        }
+
+    } while (choice != 5);
+
+    return 0;
+}
